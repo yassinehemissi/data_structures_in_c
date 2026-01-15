@@ -1,17 +1,18 @@
 #include <stdio.h>
 #include <stdlib.h> 
+#include <string.h>
+#include <stdint.h>
 
-
-struct HTRecord {
+typedef struct HTRecord {
 	char * k;
 	void * v;
 	struct HTRecord* next;
-}
+} HTRecord;
 
-struct HashTable {
+typedef struct {
 	HTRecord** buckets;
 	size_t capacity;
-}
+} HashTable;
 
 // Hashing Function
 unsigned long hash(unsigned char *str) {
@@ -21,7 +22,7 @@ unsigned long hash(unsigned char *str) {
 	    hash = ((hash << 5) + hash) + c;
 	}
 	return hash;
-}
+};
 
 
 // Record Functions
@@ -49,7 +50,7 @@ HashTable * ht_create(size_t capacity){
 	HashTable * ht = (HashTable*) malloc(sizeof(HashTable));
 	if (!ht) return NULL; 
 	ht->capacity = capacity; 
-	ht->buckets =  calloc(ht->capacity, sizeof(HTRecord*)); 
+	ht->buckets = calloc(ht->capacity, sizeof(HTRecord)); 
 	if (!ht->buckets){
 		free(ht);
 		return NULL; 
@@ -107,7 +108,6 @@ void ht_delete(HashTable * ht, char * key){
 			}
 			htr_delete(e);
 			return; 
-		}
 		prev = e; 
 		e = e->next; 
 	}
