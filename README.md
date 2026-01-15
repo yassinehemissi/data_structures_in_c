@@ -2,7 +2,7 @@
 
 ### Introduction
 
-This is my attempt to refresh my brain after not coding with C for a while and bypassing the AI recalling bugging AI autocompletion causes due to day to day exposure 
+This is my attempt to refresh my understanding after not coding in C for a while, and to bypass the AI-induced recall issues that come from day-to-day exposure to autocompletion.
 
 ### Tools
 - Lang: C 
