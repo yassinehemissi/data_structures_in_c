@@ -12,8 +12,8 @@ This is my attempt to refresh my understanding after not coding in C for a while
   - My Brain after wasting 8 years on CS (Sarcastic)   
 
 ### Data Structures:
-- Hash Tables (no dynamic resizing yet, collision handling implemented)
-
+- Hash Tables (Missing Heap vs Stack allocation errors)
+- Vector (not fully failure atomic yet)
 ### Author 
 - Mohamed Yassine Hemissi
 
