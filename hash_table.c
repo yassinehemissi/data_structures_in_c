@@ -12,10 +12,11 @@ typedef struct HTRecord {
 typedef struct {
 	HTRecord** buckets;
 	size_t capacity;
+	size_t trecords; // Total Records 
 } HashTable;
 
 // Hashing Function
-unsigned long hash(unsigned char *str) {
+unsigned long hash(const char *str) {
 	unsigned long hash = 5381;
 	int c;
 	while ((c = *str++)) {
@@ -28,7 +29,7 @@ unsigned long hash(unsigned char *str) {
 // Record Functions
 
 HTRecord* htr_create(char * key, void * value){
-	HTRecord * new_record = malloc(sizeof(new_record)); 
+	HTRecord * new_record = malloc(sizeof(HTRecord)); 
 	if (!new_record) return NULL;
 	new_record->k = strdup(key); 
 	new_record->v = value; 
@@ -36,9 +37,9 @@ HTRecord* htr_create(char * key, void * value){
 	return new_record; 
 }
 
-void htr_delete(HTRecord * htr){
+void htr_delete(HTRecord * htr, int freeV){
 	free(htr->k);
-	free(htr->v);
+	if (freeV) free(htr->v);
 	free(htr); 
 }
 
@@ -50,7 +51,8 @@ HashTable * ht_create(size_t capacity){
 	HashTable * ht = (HashTable*) malloc(sizeof(HashTable));
 	if (!ht) return NULL; 
 	ht->capacity = capacity; 
-	ht->buckets = calloc(ht->capacity, sizeof(HTRecord)); 
+	ht->buckets = calloc(ht->capacity, sizeof(HTRecord*)); 
+	ht->trecords = 0; 
 	if (!ht->buckets){
 		free(ht);
 		return NULL; 
@@ -58,26 +60,55 @@ HashTable * ht_create(size_t capacity){
 	return ht; 
 }
 
-
-void ht_put(HashTable * ht, char * key, void * value){
-	// We'll skip the capacity check here as we'll impelment a resize later on 
-	uint64_t idx = hash(key) % ht->capacity; 
-	HTRecord* new_record = htr_create(key, value);
-	if (!ht->buckets[idx]){
-		ht->buckets[idx] = new_record;
-		return; 
-	}
-	HTRecord* e = ht->buckets[idx]; 
+int ht_buckets_put(HTRecord** buckets, HTRecord* new_record, uint64_t idx) {
+	HTRecord* e = buckets[idx];
+	if (!buckets[idx]){
+		buckets[idx] = new_record; 
+		return 1; 
+	};
 	while (e){
-		if (strcmp(e->k, key) == 0){
-			e->v = value; 
-			htr_delete(new_record); 
-			return; 
+		if (strcmp(e->k, new_record->k) == 0){
+			free(e->v); 
+			e->v = new_record->v; 
+			htr_delete(new_record, 0); 
+			return 0; 
 		}
 		if (!e->next) break; 
 		e = e->next; 
 	}
-	e->next = new_record;  
+	e->next = new_record;
+	return 1;
+}
+
+
+void ht_resize(HashTable * ht){
+	size_t new_capacity = ht->capacity * 2; 
+	HTRecord** new_buckets = calloc(new_capacity, sizeof(HTRecord*)); 
+	for (size_t i = 0; i < ht->capacity; i++){
+		while (ht->buckets[i]){
+			HTRecord * e = ht->buckets[i]; 
+			ht->buckets[i] = e->next; 
+			e->next = NULL;
+			uint64_t idx = hash(e->k) % new_capacity; 	
+			ht_buckets_put(new_buckets, e, idx);
+		}
+	}; 
+	ht->capacity = new_capacity;
+	free(ht->buckets);
+	ht->buckets = new_buckets; 
+}
+
+
+void ht_put(HashTable * ht, char * key, void * value){
+	// Checking load factor threshold 75% which is total records / capacity  
+	size_t load_factor = (ht->trecords * 100) / (ht->capacity); 
+	if (load_factor > 75) ht_resize(ht); 
+
+	uint64_t idx = hash(key) % ht->capacity; 
+	HTRecord* new_record = htr_create(key, value);
+	int result = ht_buckets_put(ht->buckets, new_record, idx); 
+	// result = 0: update; 1: new  
+	if (result) ht->trecords++; 
 }
 
 
@@ -96,22 +127,35 @@ void * ht_get(HashTable * ht, char * key){
 
 void ht_delete(HashTable * ht, char * key){
 	uint64_t idx = hash(key) % ht->capacity; 
-	if (!ht->buckets[idx]) return NULL; 
+	if (!ht->buckets[idx]) return; 
 	HTRecord* e = ht->buckets[idx]; 
 	HTRecord* prev = NULL; 
 	while (e) {
 		if (strcmp(e->k, key) == 0){
 			if (prev == NULL){
 				ht->buckets[idx] = e->next; 
-			} else 
+			} else {
 				prev->next = e->next;
 			}
-			htr_delete(e);
-			return; 
+			htr_delete(e, 1);
+			ht->trecords--;
+			return;
+		}
 		prev = e; 
 		e = e->next; 
 	}
 }
 
 
-
+void ht_destroy(HashTable * ht){
+	for (size_t i = 0; i < ht->capacity; i++){
+		if (!ht->buckets[i]) continue; 
+		while (ht->buckets[i]){
+			HTRecord * e = ht->buckets[i]; 
+			ht->buckets[i] = e->next; 
+			htr_delete(e, 1); 
+		}
+	}
+	free(ht->buckets);
+	free(ht);
+}
