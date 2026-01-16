@@ -13,7 +13,7 @@ This is my attempt to refresh my understanding after not coding in C for a while
 
 ### Data Structures:
 - Hash Tables (Missing Heap vs Stack allocation errors)
-- Vector (not fully failure atomic yet)
+- Vector 
 ### Author 
 - Mohamed Yassine Hemissi
 

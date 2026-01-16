@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdint.h>
+#include <assert.h>
 
 typedef struct Vec {
 	void** items;
@@ -55,8 +56,9 @@ void vector_push(Vec * v, void* value){
 		int error = vector_resize(v);
 		if (error) return;
 	};
-	v->items[v->size] = malloc(v->item_size);
-	if (v->items[v->size] == NULL) return;
+	void * new_item = malloc(v->item_size);
+	if (new_item == NULL) return;
+	v->items[v->size] = new_item; 
 	memcpy(v->items[v->size], value, v->item_size);
 	(v->size)++;
 }
@@ -93,9 +95,10 @@ int vector_delete(Vec * v, size_t index){
 
 int vector_set(Vec * v, size_t index, void * value){
 	if (index >= v->size) return 1; 
+	void * new_item = malloc(v->item_size);	
+	if (new_item == NULL) return 1; 
 	free(v->items[index]);
-	v->items[index] = malloc(v->item_size);
-	if (v->items[index] == NULL) return 1; 
+	v->items[index] = new_item;
 	memcpy(v->items[index], value, v->item_size);
 	return 0;
 }
@@ -103,16 +106,17 @@ int vector_set(Vec * v, size_t index, void * value){
 // This allows inserting only inside the interval [0, size] 
 int vector_insert(Vec * v, size_t index, void * value){
 	if (index > v->size) return 1;
-	if (v->size + 1 >= v->t_size){
+	if (v->size >= v->t_size){
 		int error = vector_resize(v);
 		if (error) return 1;
 	};
+	void * new_item = malloc(v->item_size);
+	if (new_item == NULL) return 1;
 	for (size_t i = v->size; i > index; i--){
 		v->items[i] = v->items[i - 1];
 	};
-	v->items[index] = malloc(v->item_size);
-	if (v->items[index] == NULL) return 1;
-	memcpy(v->items[index], value, v->item_size);
+	v->items[index] = new_item;
+ 	memcpy(v->items[index], value, v->item_size);
 	v->size++;
 	return 0;
 }
