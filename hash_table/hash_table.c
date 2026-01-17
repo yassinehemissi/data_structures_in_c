@@ -2,18 +2,7 @@
 #include <stdlib.h> 
 #include <string.h>
 #include <stdint.h>
-
-typedef struct HTRecord {
-	char * k;
-	void * v;
-	struct HTRecord* next;
-} HTRecord;
-
-typedef struct {
-	HTRecord** buckets;
-	size_t capacity;
-	size_t trecords; // Total Records 
-} HashTable;
+#include "hash_table.h"
 
 // Hashing Function
 unsigned long hash(const char *str) {
@@ -23,11 +12,9 @@ unsigned long hash(const char *str) {
 	    hash = ((hash << 5) + hash) + c;
 	}
 	return hash;
-};
-
+}
 
 // Record Functions
-
 HTRecord* htr_create(char * key, void * value){
 	HTRecord * new_record = malloc(sizeof(HTRecord)); 
 	if (!new_record) return NULL;
@@ -44,7 +31,6 @@ void htr_delete(HTRecord * htr, int freeV){
 }
 
 // Hash Table Function 
-
 HashTable * ht_create(size_t capacity){
 	if (capacity < 8)
 		capacity = 8; 
@@ -80,7 +66,6 @@ int ht_buckets_put(HTRecord** buckets, HTRecord* new_record, uint64_t idx) {
 	return 1;
 }
 
-
 void ht_resize(HashTable * ht){
 	size_t new_capacity = ht->capacity * 2; 
 	HTRecord** new_buckets = calloc(new_capacity, sizeof(HTRecord*)); 
@@ -98,7 +83,6 @@ void ht_resize(HashTable * ht){
 	ht->buckets = new_buckets; 
 }
 
-
 void ht_put(HashTable * ht, char * key, void * value){
 	// Checking load factor threshold 75% which is total records / capacity  
 	size_t load_factor = (ht->trecords * 100) / (ht->capacity); 
@@ -111,7 +95,6 @@ void ht_put(HashTable * ht, char * key, void * value){
 	if (result) ht->trecords++; 
 }
 
-
 void * ht_get(HashTable * ht, char * key){
 	uint64_t idx = hash(key) % ht->capacity; 
 	if (!ht->buckets[idx]) return NULL; 
@@ -123,7 +106,6 @@ void * ht_get(HashTable * ht, char * key){
 	}
 	return NULL; 
 }
-
 
 void ht_delete(HashTable * ht, char * key){
 	uint64_t idx = hash(key) % ht->capacity; 
@@ -145,7 +127,6 @@ void ht_delete(HashTable * ht, char * key){
 		e = e->next; 
 	}
 }
-
 
 void ht_destroy(HashTable * ht){
 	for (size_t i = 0; i < ht->capacity; i++){

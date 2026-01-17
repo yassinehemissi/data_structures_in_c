@@ -2,14 +2,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdint.h>
-#include <assert.h>
+#include "vector.h"
 
-typedef struct Vec {
-	void** items;
-	size_t item_size; 
-	size_t size; 
-	size_t t_size; // total size 
-} Vec;
 
 Vec * vector_create(size_t item_size, size_t t_size){
 	if (t_size < 8) t_size = 8;
@@ -69,12 +63,12 @@ void vector_pop(Vec * v){
 	free(v->items[idx]);
 	v->items[idx] = NULL;
 	v->size--; 
-}; 
+} 
 
 void * vector_get(Vec* v, size_t index){
 	if (index >= v->size) return NULL; 
 	return v->items[index];
-};
+}
 
 int vector_find(Vec* v, void * val){
 	for (size_t i = 0; i < v->size; i++)
