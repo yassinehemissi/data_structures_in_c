@@ -13,8 +13,8 @@ This is my attempt to refresh my understanding after not coding in C for a while
 
 ### Data Structures:
 - Hash Tables (Missing Heap vs Stack allocation errors)
-- Vector
-- Heap (Raw for now doesn't compile)
+- Vector 
+- Heap 
 ### Author 
 - Mohamed Yassine Hemissi
 

@@ -1,8 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "vector/vector.h"
+#include "heap/test.c"
+
 
 int main(){
-  printf("Hello World");
+  test_heap();
+
   return 0; 
 }

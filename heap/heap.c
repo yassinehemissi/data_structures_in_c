@@ -3,12 +3,13 @@
 #include <string.h>
 #include <stdint.h>
 #include <math.h>
-#include "heap.h"; 
+#include "heap.h" 
 
-Heap * heap_create(int htype, size_t item_size){
+Heap * heap_create(int htype, size_t item_size, HeapCompare cmp){
   Heap * h = malloc(sizeof(Heap));
   if (!h) return NULL; 
   h->htype = htype;
+  h->cmp = cmp;
   h->item_size = item_size;
   h->data = vector_create(item_size, 8); // creating vectr with 8 total space and item_size  
   if (!h->data){
@@ -18,61 +19,84 @@ Heap * heap_create(int htype, size_t item_size){
   return h;
 }
 
-int step_up(int htype, int cmp_r){
-  if (htype && cmp_r >= 0) return 0; 
-  else if (!htype && cmp_r <= 0) return 0; 
-  return 1;
-}
-
-int step_down(int htype, int cmp_r){
-  if (htype && cmp_r <= 0) return 0; 
-  else if (!htype && cmp_r >= 0) return 0; 
-  return 1;
-}
-
-void heapify(size_t index, void * value, Heap * h, int step_up){ // step_up = 1 or step_down if 0 
-  size_t p_idx;
-  void * parent;
-  if (step_up){
-    p_idx = (size_t) ceil((double) index / 2);  // parent index ceil of (position / 2) 
-    parent = vector_get(h->data, p_idx);
-  } else {
-    void * ch1 = vector_get(index * 2 + 1);
-    void * ch2 = vector_get(index * 2 + 2);
-    int cmp = memcmp(ch1, ch2, h->item_size);
-    if ((cmp >= 0 && h->htype) || (cmp <= 0 && !h->htype)){
-      parent = ch1; 
-      p_idx = index * 2 + 1; 
-    } else {
-      parent = ch2; 
-      p_idx = index * 2 + 2; 
-    }  
-  } 
-  int cmp_r = memcmp(value, parent, h->item_size); 
-  int result; 
-  size_t next_index;
-  if (step_up) result = step_up(htype, cmp_r);
-  else result = step_down(htype, cmp_r);
-  if (!result) return; 
+int step_up(size_t index, Heap * h){
+  if (index == 0) return -1; 
+  size_t p_idx = (index - 1) / 2; 
+  int cmp_r = h->cmp(vector_get(h->data, p_idx), vector_get(h->data, index)); 
+  if (h->htype && cmp_r >= 0) return -1; 
+  else if (!h->htype && cmp_r <= 0) return -1;
+  void * parent = vector_get(h->data, p_idx);
   h->data->items[p_idx] = h->data->items[index];
   h->data->items[index] = parent;
-  heapify(p_idx, value, h);
-};
+  return p_idx;
+}
+
+int step_down(size_t index, Heap * h){
+  if (h->data->size <= index * 2 + 1) return -1;
+  void * ch1 = vector_get(h->data, index * 2 + 1);
+  void * ch2 = vector_get(h->data, index * 2 + 2);
+  if (!ch2 && !ch1) return -1;
+  void * child; 
+  size_t c_index; 
+  if (ch1 && ch2){
+    int cmp = h->cmp(ch1, ch2);
+    if ((h->htype && cmp <= 0) || (!h->htype && cmp >= 0)){
+      c_index = index * 2 + 2;
+      child = ch2;
+    } else {
+      c_index = index * 2 + 1;
+      child = ch1;
+    }
+  } else if (ch1) {
+      c_index = index * 2 + 1;
+      child = ch1;
+  } else if (ch2){
+      c_index = index * 2 + 2;
+      child = ch2;
+  } 
+  void * parent = vector_get(h->data, index);
+  int cmp_r = h->cmp(parent, child);
+  if (h->htype && cmp_r >= 0) return -1;
+  else if (!h->htype && cmp_r <= 0) return -1; 
+  h->data->items[index] = h->data->items[c_index];
+  h->data->items[c_index] = parent;
+  return c_index;
+}
+
+void heapify(size_t index, Heap * h, int is_step_up){ // step_up = 1 or step_down if 0 
+  int step_result;
+  if (is_step_up) step_result = step_up(index, h); 
+  else step_result = step_down(index, h);
+  if (step_result == -1) return; 
+  heapify(step_result, h, is_step_up);
+}
+
+size_t heap_size(Heap * h){
+  return h->data->size;
+}
 
 int heap_push(Heap * h, void * value){
   vector_push(h->data,  value);
-  heapify(h->data->size - 1, value, h, 1); 
+  heapify(h->data->size - 1, h, 1);
+  return 0;
 }
 
-int heap_pop(){
+int heap_pop(Heap * h){
+  if (h->data->size == 0) return 1;
   h->data->items[0] = h->data->items[h->data->size - 1]; 
+  h->data->items[h->data->size - 1] = NULL; 
   vector_pop(h->data);
-  heapify(0, h->data->items[0], h, 0);
+  heapify(0, h, 0);
+  return 0;
 }
 
 void * heap_peek(Heap * h){
+  if (h->data->size == 0) return NULL;
   return h->data->items[0];  
 } 
 
-
+void heap_destroy(Heap * h){
+  vector_destroy(h->data);
+  free(h);
+}
 
