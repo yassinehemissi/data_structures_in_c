@@ -96,9 +96,58 @@ static void test_logged(int htype) {
     printf("\n===== %s-HEAP OK =====\n", htype ? "MAX" : "MIN");
 }
 
+static void test_heap_build(int htype) {
+    printf("\n===== HEAP_BUILD %s-HEAP TEST =====\n", htype ? "MAX" : "MIN");
+
+    // source vector
+    Vec *v = vector_create(sizeof(int), 8);
+    int vals[] = { 4, 7, 1, 9, 2, 6, 5 };
+    size_t n = sizeof(vals) / sizeof(vals[0]);
+
+    for (size_t i = 0; i < n; i++) {
+        vector_push(v, &vals[i]);
+    }
+
+    printf("source vector = [ ");
+    for (size_t i = 0; i < v->size; i++) {
+        printf("%d ", *(int*)vector_get(v, i));
+    }
+    printf("]\n");
+
+    // build heap
+    Heap *h = heap_build(v, htype, int_cmp);
+    assert(h);
+
+    print_heap(h);
+
+    // verify pop order
+    printf("pop order = ");
+    int last = 0;
+    for (size_t i = 0; i < n; i++) {
+        int top = *(int*)heap_peek(h);
+        printf("%d ", top);
+
+        if (i > 0) {
+            if (htype == 0) assert(last <= top); // min-heap ascending
+            else           assert(last >= top); // max-heap descending
+        }
+        last = top;
+
+        heap_pop(h);
+    }
+    printf("\n");
+
+    heap_destroy(h);
+    vector_destroy(v);
+
+    printf("HEAP_BUILD %s-HEAP OK\n", htype ? "MAX" : "MIN");
+}
+
 int test_heap() {
     test_logged(0);  // min-heap
     test_logged(1);  // max-heap
+    test_heap_build(0);
+    test_heap_build(1);
     printf("\nALL LOGGED HEAP TESTS PASSED\n");
     return 0;
 }

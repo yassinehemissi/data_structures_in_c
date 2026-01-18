@@ -5,20 +5,6 @@
 #include <math.h>
 #include "heap.h" 
 
-Heap * heap_create(int htype, size_t item_size, HeapCompare cmp){
-  Heap * h = malloc(sizeof(Heap));
-  if (!h) return NULL; 
-  h->htype = htype;
-  h->cmp = cmp;
-  h->item_size = item_size;
-  h->data = vector_create(item_size, 8); // creating vectr with 8 total space and item_size  
-  if (!h->data){
-    free(h);
-    return NULL;
-  };
-  return h;
-}
-
 int step_up(size_t index, Heap * h){
   if (index == 0) return -1; 
   size_t p_idx = (index - 1) / 2; 
@@ -79,6 +65,41 @@ int heap_push(Heap * h, void * value){
   vector_push(h->data,  value);
   heapify(h->data->size - 1, h, 1);
   return 0;
+}
+
+Heap * heap_create(int htype, size_t item_size, HeapCompare cmp){
+  Heap * h = malloc(sizeof(Heap));
+  if (!h) return NULL; 
+  h->htype = htype;
+  h->cmp = cmp;
+  h->item_size = item_size;
+  h->data = vector_create(item_size, 8); // creating vectr with 8 total space and item_size  
+  if (!h->data){
+    free(h);
+    return NULL;
+  };
+  return h;
+}
+
+// O(n)
+Heap * heap_build(Vec * v, int htype, HeapCompare cmp){
+  Heap * h = heap_create(htype, v->item_size, cmp);
+  if (!h) return NULL;
+  vector_destroy(h->data);
+  h->data = vector_create(v->item_size, v->t_size);
+  if (!h->data) {
+    free(h);
+    return NULL;
+  };
+  for (size_t i = 0; i < v->size; i++){
+    vector_push(h->data, vector_get(v, i));
+  };
+  if (h->data->size <= 1) return h;
+  for (size_t i = ((h->data->size / 2) - 1); i >= 0; i--){
+    heapify(i, h, 0);
+    if (i == 0) break;
+  };
+  return h;
 }
 
 int heap_pop(Heap * h){

@@ -14,6 +14,7 @@ typedef struct Heap {
 } Heap; 
 
 Heap * heap_create(int htype, size_t item_size, HeapCompare cmp);
+Heap * heap_build(Vec * v, int htype, HeapCompare cmp);
 int heap_push(Heap * h, void * value);
 int heap_pop(Heap * h);
 void * heap_peek(Heap * h); 
