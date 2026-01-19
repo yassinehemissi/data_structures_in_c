@@ -5,7 +5,8 @@
 typedef struct HTRecord {
 	char * k;
 	void * v;
-	struct HTRecord* next;
+  size_t item_size;
+  struct HTRecord* next;
 } HTRecord;
 
 typedef struct {
@@ -23,6 +24,5 @@ void ht_put(HashTable * ht, char * key, void * value);
 void * ht_get(HashTable * ht, char * key);
 void ht_delete(HashTable * ht, char * key);
 void ht_destroy(HashTable * ht);
-
 
 #endif 

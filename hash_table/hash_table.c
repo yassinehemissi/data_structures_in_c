@@ -15,11 +15,22 @@ unsigned long hash(const char *str) {
 }
 
 // Record Functions
-HTRecord* htr_create(char * key, void * value){
+HTRecord* htr_create(char * key, void * value, size_t item_size){
 	HTRecord * new_record = malloc(sizeof(HTRecord)); 
 	if (!new_record) return NULL;
-	new_record->k = strdup(key); 
-	new_record->v = value; 
+  new_record->item_size = item_size;
+  new_record->v = malloc(item_size);
+	if (!new_record->v) {
+    free(new_record);
+    return NULL; 
+  }
+  new_record->k = strdup(key);
+  if (!new_record->k){
+    free(new_record->v);
+    free(new_record);
+    return NULL; 
+  }
+	memcpy(new_record->v , value, item_size); 
 	new_record->next = NULL; 
 	return new_record; 
 }
@@ -55,7 +66,8 @@ int ht_buckets_put(HTRecord** buckets, HTRecord* new_record, uint64_t idx) {
 	while (e){
 		if (strcmp(e->k, new_record->k) == 0){
 			free(e->v); 
-			e->v = new_record->v; 
+			e->v = new_record->v;
+      e->item_size = new_record->item_size;
 			htr_delete(new_record, 0); 
 			return 0; 
 		}
@@ -83,14 +95,17 @@ void ht_resize(HashTable * ht){
 	ht->buckets = new_buckets; 
 }
 
-void ht_put(HashTable * ht, char * key, void * value){
+void ht_put(HashTable * ht, char * key, void * value, size_t value_size){
 	// Checking load factor threshold 75% which is total records / capacity  
 	size_t load_factor = (ht->trecords * 100) / (ht->capacity); 
 	if (load_factor > 75) ht_resize(ht); 
-
+  
 	uint64_t idx = hash(key) % ht->capacity; 
-	HTRecord* new_record = htr_create(key, value);
-	int result = ht_buckets_put(ht->buckets, new_record, idx); 
+	HTRecord* new_record = htr_create(key, value, value_size);
+	if (!new_record){
+    return NULL;  
+  }
+  int result = ht_buckets_put(ht->buckets, new_record, idx); 
 	// result = 0: update; 1: new  
 	if (result) ht->trecords++; 
 }
