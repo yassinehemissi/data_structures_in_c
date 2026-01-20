@@ -95,10 +95,10 @@ Heap * heap_build(Vec * v, int htype, HeapCompare cmp){
     vector_push(h->data, vector_get(v, i));
   };
   if (h->data->size <= 1) return h;
-  for (size_t i = ((h->data->size / 2) - 1); i >= 0; i--){
+  for (size_t i = ((h->data->size / 2) - 1); i > 0; i--){
     heapify(i, h, 0);
-    if (i == 0) break;
   };
+  heapify(0, h, 0);
   return h;
 }
 

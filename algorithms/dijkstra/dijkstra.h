@@ -28,9 +28,10 @@ typedef struct Dijkstra {
 
 
 DijNode * dijkstra_create_node(size_t id, size_t  neighbors[], uint64_t distances[], size_t n);
+void dijkstra_destroy_node(DijNode * dn);
 Dijkstra * dijkstra_create(DijNode * source, size_t total_nodes);
 Dijkstra * dijkstra_add_node(Dijkstra * d, DijNode * node); 
 Dijkstra * dijkstra_compute(Dijkstra * d);
-
+void dijkstra_destroy(Dijkstra * d);
 
 #endif 

@@ -52,7 +52,7 @@ Dijkstra * dijkstra_create(DijNode * source, size_t total_nodes) {
   if (!dij) return NULL;
   dij->total_nodes = total_nodes; 
   dij->source = source->id;  
-  dij->open = heap_create(0, sizeof(DijPair*), dijkstra_node_compare);
+  dij->open = heap_create(0, sizeof(DijPair), dijkstra_node_compare);
   if (!dij->open){
     free(dij);
     return NULL; 
@@ -89,6 +89,7 @@ Dijkstra * dijkstra_create(DijNode * source, size_t total_nodes) {
     dij->nodes[i] = NULL;
   }
   dij->nodes[source->id] = source;
+
   return dij;
 }
 
@@ -101,16 +102,15 @@ Dijkstra * dijkstra_add_node(Dijkstra * d, DijNode * node){
 Dijkstra * dijkstra_compute(Dijkstra * d){
   d->distances[d->source] = 0;
   DijPair * dp = dijkstra_create_dijpair(0, d->source);
+  
   if (!dp) return d;
   heap_push(d->open, dp);
   while (d->open->data->size){
-    DijPair * curp = heap_peek(d->open);
+    DijPair * curp = d->open->data->items[0]; //heap_peek(d->open);
     if (!curp){
       heap_pop(d->open);
       continue;
     }
-    printf("%zu\n", curp->id);
-    printf("%" PRIu64 " \n", curp->d);
     
     DijNode * cur = d->nodes[curp->id];
     if (!cur) {
@@ -123,7 +123,6 @@ Dijkstra * dijkstra_compute(Dijkstra * d){
       heap_pop(d->open);
       continue;
     }
-    printf("Entering loop");
     for (size_t i = 0 ; i < cur->n; i++){
       size_t neighbor = cur->neighbors[i];
       uint64_t distance = cur->distances[i];
@@ -139,9 +138,28 @@ Dijkstra * dijkstra_compute(Dijkstra * d){
     d->visited[cur->id] = true;
     free(curp);
     heap_pop(d->open);
-    printf("First Iteration\n");
   } 
   return d; 
 }
 
+void dijkstra_destroy_node(DijNode * dn){
+  if (!dn) return;
+  free(dn->neighbors);
+  free(dn->distances);
+  free(dn);
+}
 
+void dijkstra_destroy(Dijkstra * d){
+  if (d->open && d->open->data && d->open->data->items){
+    for (size_t i = 0; i < d->open->data->size; i++)
+      free(d->open->data->items[i]);
+    heap_destroy(d->open);
+  }
+  for (size_t i = 0; i < d->total_nodes; i++)
+    if (d->nodes[i]) dijkstra_destroy_node(d->nodes[i]);
+  free(d->nodes);
+  free(d->previous);
+  free(d->visited);
+  free(d->distances);
+  free(d);
+}

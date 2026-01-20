@@ -17,7 +17,7 @@ This is my attempt to refresh my understanding after not coding in C for a while
 - Heap 
 
 ### Algorithms
-- Dijkstra (Still not functional debugging)
+- Dijkstra
 
 ### Author 
 - Mohamed Yassine Hemissi
