@@ -1,10 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "heap/test.c"
+#include "algorithms/dijkstra/test.c"
 
 
 int main(){
-  test_heap();
-
+  test_dijkstra();
   return 0; 
 }
