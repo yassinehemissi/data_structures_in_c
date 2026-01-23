@@ -16,6 +16,9 @@ This is my attempt to refresh my understanding after not coding in C for a while
 - Vector 
 - Heap 
 
+### System DS:
+- Dynamic Buffer (DynBuf)
+
 ### Algorithms
 - Dijkstra
 
