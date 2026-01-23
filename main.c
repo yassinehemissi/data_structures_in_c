@@ -1,9 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "algorithms/dijkstra/test.c"
+#include "dynbuf/test.c"
 
 
 int main(){
-  test_dijkstra();
+  test_dynbuf();
   return 0; 
 }
